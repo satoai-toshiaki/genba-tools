@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>現場打ち合わせシート</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDPMincho:wght@700&display=swap">
+<style>
+/* layout: one column — 入力カード → A4プレビュー → 保存バー（下に固定） */
+:root{
+  --bg:#f2f3f5; --surface:#ffffff; --fg:#20242a; --muted:#666d78; --line:#d6d9df;
+  --accent:#2c4f7c; --accent-fg:#ffffff; --soft:#e4eaf3;
+  --ok:#2f6d3a; --warn:#a24a1c;
+  --paper:#ffffff; --ink:#1d1d1b; --rule:#9a9c95;
+  --f-body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --f-title:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16191e; --surface:#20242b; --fg:#e6e9ee; --muted:#a0a7b2; --line:#353a43;
+  --accent:#8fb0dc; --accent-fg:#10151c; --soft:#25303f; --ok:#8cc79a; --warn:#e79a6a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16191e; --surface:#20242b; --fg:#e6e9ee; --muted:#a0a7b2; --line:#353a43;
+  --accent:#8fb0dc; --accent-fg:#10151c; --soft:#25303f; --ok:#8cc79a; --warn:#e79a6a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--f-title);font-size:24px;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:2px 0 0;font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:14px;margin:0;letter-spacing:.08em;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr 1fr}.grid3 > :first-child{grid-column:1/-1}}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+input[type=text],input[type=date],input[type=time],input[type=url],textarea,select{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:44px}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.side{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.side b{font-size:13px}
+.side input{background:var(--surface)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:700}
+.topics{display:flex;flex-direction:column;gap:10px}
+.topic{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.topic-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.topic-head b{font-size:15px}
+.topic textarea,.topic input{background:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex-shrink:0}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--fg);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);font-weight:700}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:8px 12px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.del{border:0;background:transparent;color:var(--muted);padding:4px 6px}
+.inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.hint.ng{color:var(--warn)}
+.fit{font-size:13px;font-weight:700}
+.fit.ok{color:var(--ok)} .fit.ng{color:var(--warn)}
+.preview-box{display:flex;flex-direction:column;gap:8px}
+#scaleHost{width:100%;overflow:hidden;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.18)}
+#sheetScaler{width:794px;transform-origin:top left}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;z-index:5}
+.bar .primary{background:var(--accent);color:var(--accent-fg);border:0;font-weight:700;padding:12px 20px;font-size:16px;border-radius:10px}
+.bar .msg{font-size:13px;color:var(--muted);flex-basis:100%;text-align:center;min-height:1em}
+
+/* ===== A4 用紙 ===== */
+#sheet{width:794px;height:1123px;background:var(--paper);color:var(--ink);font-family:var(--f-body);
+  padding:76px 57px 57px;display:flex;flex-direction:column;overflow:hidden;font-size:var(--sz,14px);line-height:1.55}
+#sheet .t{font-family:var(--f-title);font-size:26px;text-align:center;letter-spacing:.3em;margin:0 0 6px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+#sheet .issued{text-align:right;font-size:.88em;margin-bottom:12px}
+#sheet table{width:100%;border-collapse:collapse;table-layout:fixed}
+#sheet th,#sheet td{border:1px solid var(--rule);padding:5px 8px;vertical-align:top;text-align:left;white-space:pre-wrap;word-break:break-all}
+#sheet th{background:#f1f2ee;font-weight:700}
+#sheet .k{width:16%;background:#f1f2ee;font-weight:700}
+#sheet .placewrap{display:flex;gap:10px;align-items:flex-start}
+#sheet .placewrap > div:first-child{flex:1;min-width:0}
+#sheet .url{font-size:.78em;color:#444}
+#sheet .qr{width:84px;flex-shrink:0;text-align:center;font-size:10px}
+#sheet .qr img,#sheet .qr canvas{width:84px!important;height:84px!important;display:block}
+#sheet h3{font-size:1em;margin:14px 0 4px;padding-left:6px;border-left:4px solid var(--ink)}
+#sheet .c1{width:22%} #sheet .c3{width:14%;text-align:center}
+#sheet .sign{display:flex;gap:16px;margin-top:auto;padding-top:14px}
+#sheet .sign div{flex:1;border:1px solid var(--rule);height:60px;padding:4px 8px;font-size:.85em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>現場打ち合わせシート</h1>
+    <p class="sub">元請と下請の打ち合わせを、その場でA4・1枚に。話した項目を選んで、要点だけ打ってください。</p>
+  </header>
+
+  <section class="card">
+    <h2>誰と誰が</h2>
+    <div class="grid2">
+      <div class="side"><b>元請</b>
+        <label for="mCo">会社名<input id="mCo" type="text" placeholder="○○工務店"></label>
+        <label for="mName">担当者<input id="mName" type="text" placeholder="○○さん"></label>
+      </div>
+      <div class="side"><b>自社（下請）</b>
+        <label for="sCo">会社名<input id="sCo" type="text" placeholder="自社名（1回打てば覚えます）"></label>
+        <label for="sName">担当者<input id="sName" type="text" placeholder="陶"></label>
+      </div>
+    </div>
+    <label for="others">ほかの出席者（任意）<input id="others" type="text" placeholder="施主様、設計の○○さん など"></label>
+  </section>
+
+  <section class="card">
+    <h2>いつ・どこで</h2>
+    <div class="grid3">
+      <label for="date">日付<input id="date" type="date"></label>
+      <label for="tFrom">開始<input id="tFrom" type="time"></label>
+      <label for="tTo">終了<input id="tTo" type="time"></label>
+    </div>
+    <label for="genba">現場名<input id="genba" type="text" placeholder="○○様邸 外構工事"></label>
+    <label for="place">場所（町名まで）<input id="place" type="text" placeholder="高松市○○町○○ / 現場・事務所 など"></label>
+    <label for="map">Googleマップのリンク（共有から貼り付け）<input id="map" type="url" inputmode="url" placeholder="https://maps.app.goo.gl/…"></label>
+    <div class="inline"><a id="openMap" class="btn" href="#" target="_blank" rel="noopener" hidden>地図を開いて確かめる</a><p id="mapHint" class="hint">貼ったリンクは、PDFではQRコードになります。</p></div>
+  </section>
+
+  <section class="card">
+    <h2>何を打ち合わせたか</h2>
+    <p class="hint">話した項目を押すと、下に要点の欄が出ます。</p>
+    <div id="chips" class="chips"></div>
+    <div class="inline"><input id="newTopic" type="text" placeholder="ほかの項目" style="flex:1 1 160px" aria-label="項目を足す"><button id="addTopic" class="btn" type="button">足す</button></div>
+    <div id="topics" class="topics"></div>
+  </section>
+
+  <section class="card">
+    <h2>次回・その他</h2>
+    <label for="next">次回の予定（任意）<input id="next" type="text" placeholder="○月○日 現場で着工前確認"></label>
+    <label for="memo">メモ（任意）<textarea id="memo" rows="2"></textarea></label>
+    <div class="inline"><label class="inline" for="signOn" style="flex-direction:row;font-size:14px;color:var(--fg)"><input id="signOn" type="checkbox"> 下に確認の署名欄を付ける</label></div>
+    <div><button class="btn" id="reset" type="button">新しいシートにする</button></div>
+  </section>
+
+  <section class="preview-box">
+    <div id="fit" class="fit"></div>
+    <div id="scaleHost"><div id="sheetScaler"><div id="sheet"></div></div></div>
+  </section>
+</div>
+
+<div class="bar">
+  <button class="btn" id="copy" type="button">LINE用にコピー</button>
+  <button class="btn primary" id="pdf" type="button">PDFを作る</button>
+  <span class="msg" id="msg"></span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const KEY='genba-uchiawase-v1';
+const PRESET=['工程・着工日','仕様・色・品番','数量・施工範囲','金額・追加変更','境界・高さ','既存撤去・残土','搬入・駐車','近隣・施主対応','支給品','安全・養生'];
+const pad=n=>String(n).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const now=()=>{const d=new Date();return pad(d.getHours())+':'+pad(Math.floor(d.getMinutes()/5)*5)};
+const DEFAULT=()=>({mCo:'',mName:'',sCo:'',sName:'',others:'',date:today(),tFrom:now(),tTo:'',genba:'',place:'',map:'',next:'',memo:'',signOn:false,
+  extra:[],topics:[]}); // topics: {name, st, point, who}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||DEFAULT()}catch(e){S=DEFAULT()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FIELDS=['mCo','mName','sCo','sName','others','date','tFrom','tTo','genba','place','map','next','memo'];
+
+function cleanUrl(v){const m=String(v||'').match(/https?:\/\/\S+/);return m?m[0]:''}
+function bindFields(){
+  FIELDS.forEach(f=>{const el=$(f);el.value=S[f]??'';el.oninput=el.onchange=()=>{S[f]=el.value;if(f==='map')mapUi();update()}});
+  $('signOn').checked=!!S.signOn;$('signOn').onchange=e=>{S.signOn=e.target.checked;update()};
+  mapUi();
+}
+function mapUi(){
+  const u=cleanUrl(S.map),a=$('openMap'),h=$('mapHint');
+  if(S.map&&!u){a.hidden=true;h.className='hint ng';h.textContent='リンクが読めません。マップの「共有」→「リンクをコピー」で貼ってください';return}
+  h.className='hint';h.textContent=u?'このリンクはPDFでQRコードになります。':'貼ったリンクは、PDFではQRコードになります。';
+  a.hidden=!u;if(u)a.href=u;
+}
+function allNames(){return [...PRESET,...S.extra]}
+function renderChips(){
+  const box=$('chips');box.innerHTML='';
+  allNames().forEach(n=>{
+    const on=S.topics.some(t=>t.name===n);
+    const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=n;b.setAttribute('aria-pressed',on);
+    b.onclick=()=>{if(on)S.topics=S.topics.filter(t=>t.name!==n);else S.topics.push({name:n,st:'決定',point:'',who:''});renderChips();renderTopics();update()};
+    box.appendChild(b);
+  });
+}
+function renderTopics(){
+  const box=$('topics');box.innerHTML='';
+  S.topics.forEach((t,i)=>{
+    const d=document.createElement('div');d.className='topic';
+    d.innerHTML=`<div class="topic-head"><b>${esc(t.name)}</b>
+      <div class="seg" role="group" aria-label="${esc(t.name)}の結果">${['決定','持ち帰り','保留'].map(v=>`<button type="button" data-v="${v}" aria-pressed="${t.st===v}">${v}</button>`).join('')}</div></div>
+      <textarea id="p${i}" rows="2" placeholder="要点">${esc(t.point)}</textarea>
+      ${t.st!=='決定'?`<input id="w${i}" type="text" value="${esc(t.who)}" placeholder="誰が・いつまでに（例：元請 ○○さん／11月5日）">`:''}`;
+    d.querySelector('textarea').oninput=e=>{t.point=e.target.value;update()};
+    const w=d.querySelector('input');if(w)w.oninput=e=>{t.who=e.target.value;update()};
+    d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{t.st=b.dataset.v;renderTopics();update()});
+    box.appendChild(d);
+  });
+}
+$('addTopic').onclick=()=>{const v=$('newTopic').value.trim();if(!v)return;
+  if(!allNames().includes(v))S.extra.push(v);
+  if(!S.topics.some(t=>t.name===v))S.topics.push({name:v,st:'決定',point:'',who:''});
+  $('newTopic').value='';renderChips();renderTopics();update()};
+$('newTopic').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('addTopic').click()}};
+
+const W='日月火水木金土';
+function fmtDate(v){if(!v)return'';const[y,m,d]=v.split('-');const w=W[new Date(+y,+m-1,+d).getDay()];return `${y}年${+m}月${+d}日（${w}）`}
+function when(){return [fmtDate(S.date),S.tFrom&&(S.tFrom+(S.tTo?'〜'+S.tTo:'〜'))].filter(Boolean).join('　')}
+function person(co,n){return [co,n&&(n+(/(さん|様|殿)$/.test(n)?'':''))].filter(Boolean).join('　')}
+
+let qrUrl='',qrData='';
+function qrImg(u){
+  if(!u||typeof QRCode==='undefined')return'';
+  if(u!==qrUrl){const tmp=document.createElement('div');new QRCode(tmp,{text:u,width:256,height:256,correctLevel:QRCode.CorrectLevel.M});
+    const c=tmp.querySelector('canvas');qrData=c?c.toDataURL('image/png'):'';qrUrl=u}
+  return qrData;
+}
+function renderSheet(){
+  const u=cleanUrl(S.map),q=qrImg(u);
+  const rows=S.topics.map(t=>`<tr><td>${esc(t.name)}</td><td>${esc(t.point)||'　'}${t.st!=='決定'&&t.who?`\n→ ${esc(t.who)}`:''}</td><td class="c3">${esc(t.st)}</td></tr>`).join('');
+  $('sheet').innerHTML=`<div id="sheetInner" style="display:flex;flex-direction:column;min-height:${1123-76-57}px">
+    <h2 class="t">打ち合わせ記録</h2>
+    <div class="issued">作成：${esc(S.sCo)}</div>
+    <table>
+      <tr><td class="k">現場名</td><td>${esc(S.genba)||'　'}</td></tr>
+      <tr><td class="k">日時</td><td>${esc(when())||'　'}</td></tr>
+      <tr><td class="k">場所</td><td><div class="placewrap"><div>${esc(S.place)||'　'}${u?`<div class="url">${esc(u)}</div>`:''}</div>${q?`<div class="qr"><img src="${q}" alt="地図のQRコード">地図</div>`:''}</div></td></tr>
+      <tr><td class="k">元請</td><td>${esc(person(S.mCo,S.mName))||'　'}</td></tr>
+      <tr><td class="k">下請</td><td>${esc(person(S.sCo,S.sName))||'　'}</td></tr>
+      ${S.others?`<tr><td class="k">ほか出席</td><td>${esc(S.others)}</td></tr>`:''}
+    </table>
+    <h3>打ち合わせ内容</h3>
+    <table><thead><tr><th class="c1">項目</th><th>要点</th><th class="c3">結果</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="3">（項目が選ばれていません）</td></tr>'}</tbody></table>
+    ${S.next?`<h3>次回の予定</h3><div>${esc(S.next)}</div>`:''}
+    ${S.memo?`<h3>メモ</h3><div style="white-space:pre-wrap">${esc(S.memo)}</div>`:''}
+    ${S.signOn?`<div class="sign"><div>元請 確認</div><div>下請 確認</div></div>`:''}
+  </div>`;
+}
+let fits=true;
+function fitText(){
+  const sheet=$('sheet'),avail=1123-76-57;let sz=14;
+  const h=()=>{const el=$('sheetInner');el.style.minHeight='0';const v=el.scrollHeight;el.style.minHeight=avail+'px';return v};
+  sheet.style.setProperty('--sz',sz+'px');
+  while(h()>avail&&sz>11){sz-=.5;sheet.style.setProperty('--sz',sz+'px')}
+  fits=h()<=avail;
+  const f=$('fit');f.className='fit '+(fits?'ok':'ng');
+  f.textContent=fits?(sz<14?'A4・1枚に収まっています（文字を少し小さくしました）':'A4・1枚に収まっています'):'1枚からはみ出しています。要点を短くするか、メモを減らしてください';
+}
+function scale(){const w=$('scaleHost').clientWidth,s=Math.min(1,w/794);$('sheetScaler').style.transform=`scale(${s})`;$('scaleHost').style.height=(1123*s)+'px'}
+function update(){renderSheet();fitText();save()}
+
+function lineText(){
+  const u=cleanUrl(S.map);
+  const L=['【打ち合わせ記録】',S.genba&&('現場：'+S.genba),'日時：'+when(),S.place&&('場所：'+S.place),u&&('地図：'+u),
+    '元請：'+person(S.mCo,S.mName),'下請：'+person(S.sCo,S.sName),S.others&&('ほか：'+S.others),''];
+  S.topics.forEach(t=>{L.push(`■${t.name}［${t.st}］`);if(t.point)L.push(t.point);if(t.st!=='決定'&&t.who)L.push('→ '+t.who)});
+  if(S.next)L.push('','次回：'+S.next);
+  if(S.memo)L.push('','メモ：'+S.memo);
+  return L.filter(x=>typeof x==='string').join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+$('copy').onclick=async()=>{const t=lineText(),msg=$('msg');
+  try{await navigator.clipboard.writeText(t);msg.textContent='コピーしました。LINEに貼り付けてください'}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='width:100%;height:160px;margin-top:6px';
+    msg.textContent='自動でコピーできませんでした。下の文を長押しでコピーしてください';msg.appendChild(ta);ta.select()}};
+
+let armed=false;
+$('reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='もう一度押すと消えます';setTimeout(()=>{armed=false;e.target.textContent='新しいシートにする'},3000);return}
+  armed=false;e.target.textContent='新しいシートにする';const keep={sCo:S.sCo,sName:S.sName,extra:S.extra};S=Object.assign(DEFAULT(),keep);bindFields();renderChips();renderTopics();update()};
+
+
+async function deliver(blob,name){
+  const file=new File([blob],name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:name});return '送りました'}
+    catch(e){if(e&&e.name==='AbortError')return 'やめました'}
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);return '保存しました';
+}
+$('pdf').onclick=async()=>{
+  const msg=$('msg'),btn=$('pdf');
+  if(!fits){msg.textContent='1枚に収まってから保存してください';return}
+  btn.disabled=true;msg.textContent='PDFを作っています…';
+  try{
+    await document.fonts.ready;
+    const canvas=await html2canvas($('sheet'),{scale:3,backgroundColor:'#ffffff',width:794,height:1123,
+      onclone:doc=>{doc.getElementById('sheetScaler').style.transform='none'}});
+    const pdf=new jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+    const name=('打ち合わせ_'+(S.genba||S.mCo||'現場')+'_'+(S.date||'')).replace(/[\\/:*?"<>|\s]+/g,'_')+'.pdf';
+    msg.textContent=await deliver(pdf.output('blob'),name);
+  }catch(e){
+    msg.textContent=e&&e.code==='declined'?'保存をやめました':(e&&e.code==='rate_limited'?'少し待ってからもう一度押してください':'PDFを作れませんでした（'+(e&&(e.code||e.message)||'不明')+'）');
+  }finally{btn.disabled=false}
+};
+
+bindFields();renderChips();renderTopics();update();scale();
+addEventListener('resize',scale);
+document.fonts&&document.fonts.ready.then(()=>fitText());
+</script>
+</body>
+</html>

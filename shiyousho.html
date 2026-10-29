@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>外構仕様書メーカー</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=BIZ+UDPMincho:wght@700&display=swap">
+<style>
+/* layout: one column — 入力カード → A4プレビュー → 保存バー（下に固定） */
+:root{
+  --bg:#f3f4f1; --surface:#ffffff; --fg:#22261f; --muted:#6a7064; --line:#d8dbd2;
+  --accent:#2f5d46; --accent-fg:#ffffff; --soft:#e6ede7;
+  --ok:#2f6d3a; --warn:#a24a1c;
+  --paper:#ffffff; --ink:#1d1d1b; --rule:#9a9c95;
+  --f-body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --f-title:"BIZ UDPMincho","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#171a16; --surface:#21251f; --fg:#e7eae2; --muted:#a2a89a; --line:#363b32;
+  --accent:#7fb495; --accent-fg:#10140f; --soft:#26332b; --ok:#8cc79a; --warn:#e79a6a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171a16; --surface:#21251f; --fg:#e7eae2; --muted:#a2a89a; --line:#363b32;
+  --accent:#7fb495; --accent-fg:#10140f; --soft:#26332b; --ok:#8cc79a; --warn:#e79a6a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 110px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--f-title);font-size:24px;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:2px 0 0;font-size:13px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:14px;margin:0;letter-spacing:.08em;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+input[type=text],input[type=date],textarea,select{font:inherit;font-size:15px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:44px}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:6px;align-items:flex-end}
+.row label{flex:1}
+.items{display:flex;flex-direction:column;gap:10px}
+.item{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.item.off{opacity:.55}
+.item-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.item-head input{flex:1 1 140px;font-weight:700;background:var(--surface)}
+.item textarea{background:var(--surface)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex-shrink:0}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--fg);padding:6px 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);font-weight:700}
+.btn{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:8px 12px;cursor:pointer}
+.btn.del{border:0;background:transparent;color:var(--muted);padding:4px 6px}
+.checks{display:flex;flex-direction:column;gap:6px}
+.checks label{flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--fg)}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.preview-box{display:flex;flex-direction:column;gap:8px}
+.fit{font-size:13px;font-weight:700}
+.fit.ok{color:var(--ok)} .fit.ng{color:var(--warn)}
+#scaleHost{width:100%;overflow:hidden;border-radius:4px;box-shadow:0 1px 6px rgba(0,0,0,.18)}
+#sheetScaler{width:794px;transform-origin:top left}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;justify-content:center;align-items:center;z-index:5}
+.bar .primary{background:var(--accent);color:var(--accent-fg);border:0;font-weight:700;padding:12px 22px;font-size:16px;border-radius:10px}
+.bar .msg{font-size:13px;color:var(--muted);min-width:0}
+
+/* ===== A4 用紙（常に白い紙） ===== */
+#sheet{width:794px;height:1123px;background:var(--paper);color:var(--ink);font-family:var(--f-body);
+  padding:76px 57px 57px; /* 上20mm・左右下15mm */ display:flex;flex-direction:column;overflow:hidden;font-size:var(--sz,13.5px);line-height:1.55}
+#sheet .t{font-family:var(--f-title);font-size:26px;text-align:center;letter-spacing:.35em;margin:0 0 18px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+#sheet .head{display:flex;justify-content:space-between;gap:20px;margin-bottom:12px}
+#sheet .to{font-size:18px;font-weight:700;border-bottom:1px solid var(--ink);padding:0 4px 2px;min-width:300px}
+#sheet .meta{text-align:right;font-size:.92em}
+#sheet .meta .co{font-weight:700;font-size:1.1em}
+#sheet dl{display:grid;grid-template-columns:5.5em 1fr;margin:0 0 10px;gap:2px 8px}
+#sheet dt{font-weight:700;text-align-last:justify}
+#sheet dd{margin:0;border-bottom:1px dotted var(--rule)}
+#sheet .lead{margin:6px 0 8px}
+#sheet table{width:100%;border-collapse:collapse;table-layout:fixed}
+#sheet th,#sheet td{border:1px solid var(--rule);padding:5px 8px;vertical-align:top;text-align:left;white-space:pre-wrap;word-break:break-all}
+#sheet th{background:#f1f2ee;font-weight:700}
+#sheet .c1{width:30%}
+#sheet h3{font-size:1em;margin:14px 0 4px;padding-left:6px;border-left:4px solid var(--ink)}
+#sheet ul{margin:0;padding-left:1.3em}
+#sheet .note{font-size:.95em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>外構仕様書メーカー</h1>
+    <p class="sub">工種ごとに「含む／別途／なし」を選ぶと、A4・1枚の仕様書になります。「なし」は紙に出ません。</p>
+  </header>
+
+  <section class="card">
+    <h2>宛先と工事</h2>
+    <div class="grid2">
+      <div class="row">
+        <label for="to">宛名<input id="to" type="text" placeholder="○○"></label>
+        <label for="honor" style="flex:0 0 5.5em">敬称<select id="honor"><option>様</option><option>御中</option></select></label>
+      </div>
+      <label for="date">日付<input id="date" type="date"></label>
+      <label for="kouji">工事名<input id="kouji" type="text" placeholder="○○様邸 外構工事"></label>
+      <label for="basho">工事場所（町名まで）<input id="basho" type="text" placeholder="高松市○○町○○"></label>
+      <label for="co">発行<input id="co" type="text" placeholder="自社名（1回打てば覚えます）"></label>
+      <label for="coinfo">住所・TEL（任意）<input id="coinfo" type="text" placeholder="空欄なら出ません"></label>
+    </div>
+    <label for="lead">はじめの一文<textarea id="lead" rows="2"></textarea></label>
+  </section>
+
+  <section class="card">
+    <h2>工種</h2>
+    <div id="items" class="items"></div>
+    <div><button class="btn" id="addItem" type="button">＋ 工種を足す</button></div>
+  </section>
+
+  <section class="card">
+    <h2>別途工事となるもの</h2>
+    <p class="hint">チェックしたものと、上で「別途」にした工種がここに並びます。</p>
+    <div id="bettoList" class="checks"></div>
+    <label for="bettoTitle">見出しの添え書き<input id="bettoTitle" type="text"></label>
+  </section>
+
+  <section class="card">
+    <h2>備考</h2>
+    <label for="bikou">1行ずつ書く<textarea id="bikou" rows="4"></textarea></label>
+    <div><button class="btn" id="reset" type="button">はじめの状態に戻す</button></div>
+  </section>
+
+  <section class="preview-box">
+    <div id="fit" class="fit"></div>
+    <div id="scaleHost"><div id="sheetScaler"><div id="sheet"></div></div></div>
+  </section>
+</div>
+
+<div class="bar">
+  <span class="msg" id="msg"></span>
+  <button class="btn primary" id="pdf" type="button">PDFを作る</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const KEY='gaikou-shiyousho-v1';
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const DEFAULT=()=>({
+  to:'',honor:'様',date:today(),kouji:'',basho:'',co:'',coinfo:'',
+  lead:'本見積の主な仕様です。数量・仕様は現地の状況により調整させていただく場合があります。',
+  items:[
+    ['土工事','掘削・整地・砕石下地（現地状況に応じて施工）','含む'],
+    ['残土処分','現地状況に応じて処分','含む'],
+    ['土間コンクリート','約○○㎡　ワイヤーメッシュ入り・金鏝仕上げ（標準）','含む'],
+    ['目地','○○（スリット・砂利・芝など）','含む'],
+    ['ブロック・塀','○○ブロック ○段程度（基礎・配筋含む）','含む'],
+    ['門柱・アプローチ','○○仕上げ（デザインはお打合せにて）','含む'],
+    ['ポスト・表札・インターホン','品番はお打合せにて決定','含む'],
+    ['電気工事','照明・インターホン配線','含む'],
+    ['カーポート','メーカー・品番・色はお打合せにて決定','含む'],
+    ['フェンス・門扉','メーカー・品番・色はお打合せにて決定　延長 約○○m','含む'],
+    ['植栽','シンボルツリー・低木 一式（樹種はお打合せにて）','含む'],
+    ['砂利・防草シート','約○○㎡','含む']
+  ].map(([name,spec,st])=>({name,spec,st})),
+  betto:[['地中障害物の撤去・処分',true],['既存物の撤去',true],['境界確定・各種申請',true]].map(([name,on])=>({name,on})),
+  bettoTitle:'必要な場合はご相談ください',
+  bikou:'工期はご契約・発注後に工程表を作成し、改めてお知らせいたします（天候により前後する場合があります）。\n数量は現地実測により増減する場合があります。\n色・品番はご契約前に最終確認させていただきます。'
+});
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))||DEFAULT()}catch(e){S=DEFAULT()}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+const FIELDS=['to','honor','date','kouji','basho','co','coinfo','lead','bettoTitle','bikou'];
+function bindFields(){FIELDS.forEach(f=>{const el=$(f);el.value=S[f]??'';el.oninput=el.onchange=()=>{S[f]=el.value;update()}})}
+
+function renderItems(){
+  const box=$('items');box.innerHTML='';
+  S.items.forEach((it,i)=>{
+    const d=document.createElement('div');d.className='item'+(it.st==='なし'?' off':'');
+    d.innerHTML=`<div class="item-head">
+      <input type="text" id="n${i}" value="${esc(it.name)}" aria-label="工種名">
+      <div class="seg" role="group" aria-label="${esc(it.name)}の扱い">
+        ${['含む','別途','なし'].map(v=>`<button type="button" data-v="${v}" aria-pressed="${it.st===v}">${v}</button>`).join('')}
+      </div>
+      <button type="button" class="btn del" aria-label="この工種を消す">✕</button></div>
+      <textarea id="s${i}" rows="1" aria-label="仕様">${esc(it.spec)}</textarea>`;
+    d.querySelector('input').oninput=e=>{it.name=e.target.value;update()};
+    d.querySelector('textarea').oninput=e=>{it.spec=e.target.value;update()};
+    d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{it.st=b.dataset.v;renderItems();update()});
+    d.querySelector('.del').onclick=()=>{S.items.splice(i,1);renderItems();update()};
+    box.appendChild(d);
+  });
+}
+function renderBetto(){
+  const box=$('bettoList');box.innerHTML='';
+  S.betto.forEach((b,i)=>{
+    const l=document.createElement('label');l.htmlFor='b'+i;
+    l.innerHTML=`<input type="checkbox" id="b${i}" ${b.on?'checked':''}> ${esc(b.name)}`;
+    l.querySelector('input').onchange=e=>{b.on=e.target.checked;update()};
+    box.appendChild(l);
+  });
+}
+
+function fmtDate(v){if(!v)return'';const[y,m,d]=v.split('-');return `${y}年${+m}月${+d}日`}
+function renderSheet(){
+  const inc=S.items.filter(x=>x.st==='含む'&&x.name.trim());
+  const bet=[...S.betto.filter(b=>b.on).map(b=>b.name),...S.items.filter(x=>x.st==='別途'&&x.name.trim()).map(x=>x.name)];
+  const notes=S.bikou.split('\n').map(s=>s.trim()).filter(Boolean);
+  $('sheet').innerHTML=`<div id="sheetInner">
+    <h2 class="t">外構工事 仕様書</h2>
+    <div class="head">
+      <div><div class="to">${esc(S.to||'　')}　${esc(S.honor)}</div></div>
+      <div class="meta"><div>${esc(fmtDate(S.date))}</div><div class="co">${esc(S.co)}</div>${S.coinfo?`<div>${esc(S.coinfo)}</div>`:''}</div>
+    </div>
+    <dl><dt>工事名</dt><dd>${esc(S.kouji)||'　'}</dd><dt>工事場所</dt><dd>${esc(S.basho)||'　'}</dd></dl>
+    ${S.lead?`<p class="lead">${esc(S.lead)}</p>`:''}
+    <table><thead><tr><th class="c1">工種</th><th>主な仕様</th></tr></thead>
+    <tbody>${inc.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.spec)}</td></tr>`).join('')||'<tr><td colspan="2">（工種が選ばれていません）</td></tr>'}</tbody></table>
+    ${bet.length?`<h3>別途工事となるもの${S.bettoTitle?`<span style="font-weight:400">（${esc(S.bettoTitle)}）</span>`:''}</h3><p class="note" style="margin:0">${bet.map(esc).join('／')}</p>`:''}
+    ${notes.length?`<h3>備考</h3><ul class="note">${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul>`:''}
+  </div>`;
+}
+let fits=true;
+function fitText(){
+  const sheet=$('sheet'),avail=1123-76-57;
+  let sz=13.5;sheet.style.setProperty('--sz',sz+'px');
+  while($('sheetInner').scrollHeight>avail&&sz>11){sz-=.5;sheet.style.setProperty('--sz',sz+'px')}
+  fits=$('sheetInner').scrollHeight<=avail;
+  const f=$('fit');
+  f.className='fit '+(fits?'ok':'ng');
+  f.textContent=fits?(sz<13.5?'A4・1枚に収まっています（文字を少し小さくしました）':'A4・1枚に収まっています'):'1枚からはみ出しています。仕様の文を短くするか、工種を「なし」にしてください';
+}
+function scale(){const w=$('scaleHost').clientWidth,s=Math.min(1,w/794);$('sheetScaler').style.transform=`scale(${s})`;$('scaleHost').style.height=(1123*s)+'px'}
+function update(){renderSheet();fitText();save()}
+
+$('addItem').onclick=()=>{S.items.push({name:'',spec:'',st:'含む'});renderItems();update();$('n'+(S.items.length-1)).focus()};
+let armed=false;
+$('reset').onclick=e=>{if(!armed){armed=true;e.target.textContent='もう一度押すと戻ります';setTimeout(()=>{armed=false;e.target.textContent='はじめの状態に戻す'},3000);return}
+  armed=false;e.target.textContent='はじめの状態に戻す';S=DEFAULT();bindFields();renderItems();renderBetto();update()};
+
+
+async function deliver(blob,name){
+  const file=new File([blob],name,{type:'application/pdf'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:name});return '送りました'}
+    catch(e){if(e&&e.name==='AbortError')return 'やめました'}
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);return '保存しました';
+}
+
+$('pdf').onclick=async()=>{
+  const msg=$('msg'),btn=$('pdf');
+  if(!fits){msg.textContent='1枚に収まってから保存してください';return}
+  btn.disabled=true;msg.textContent='PDFを作っています…';
+  try{
+    await document.fonts.ready;
+    const canvas=await html2canvas($('sheet'),{scale:3,backgroundColor:'#ffffff',width:794,height:1123,
+      onclone:doc=>{doc.getElementById('sheetScaler').style.transform='none'}});
+    const pdf=new jspdf.jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+    const name=('仕様書_'+(S.kouji||S.to||'外構工事')+'_'+(S.date||'')).replace(/[\\/:*?"<>|\s]+/g,'_')+'.pdf';
+    msg.textContent=await deliver(pdf.output('blob'),name);
+  }catch(e){
+    msg.textContent=e&&e.code==='declined'?'保存をやめました':(e&&e.code==='rate_limited'?'少し待ってからもう一度押してください':'PDFを作れませんでした（'+(e&&(e.code||e.message)||'不明')+'）');
+  }finally{btn.disabled=false}
+};
+
+bindFields();renderItems();renderBetto();update();scale();
+addEventListener('resize',scale);
+document.fonts&&document.fonts.ready.then(()=>{fitText()});
+</script>
+</body>
+</html>
