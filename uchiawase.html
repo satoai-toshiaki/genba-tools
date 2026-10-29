@@ -91,19 +91,19 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 <div class="wrap">
   <header>
     <h1>現場打ち合わせシート</h1>
-    <p class="sub">元請と下請の打ち合わせを、その場でA4・1枚に。話した項目を選んで、要点だけ打ってください。</p>
+    <p class="sub">業者間の打ち合わせを、その場でA4・1枚に。話した項目を選んで、要点だけ打ってください。</p>
   </header>
 
   <section class="card">
     <h2>誰と誰が</h2>
     <div class="grid2">
-      <div class="side"><b>元請</b>
-        <label for="mCo">会社名<input id="mCo" type="text" placeholder="○○工務店"></label>
-        <label for="mName">担当者<input id="mName" type="text" placeholder="○○さん"></label>
-      </div>
-      <div class="side"><b>自社（下請）</b>
+      <div class="side"><b>自社</b>
         <label for="sCo">会社名<input id="sCo" type="text" placeholder="自社名（1回打てば覚えます）"></label>
         <label for="sName">担当者<input id="sName" type="text" placeholder="陶"></label>
+      </div>
+      <div class="side"><b>先方</b>
+        <label for="mCo">会社名<input id="mCo" type="text" placeholder="○○工務店"></label>
+        <label for="mName">担当者<input id="mName" type="text" placeholder="○○様"></label>
       </div>
     </div>
     <label for="others">ほかの出席者（任意）<input id="others" type="text" placeholder="施主様、設計の○○さん など"></label>
@@ -197,7 +197,7 @@ function renderTopics(){
     d.innerHTML=`<div class="topic-head"><b>${esc(t.name)}</b>
       <div class="seg" role="group" aria-label="${esc(t.name)}の結果">${['決定','持ち帰り','保留'].map(v=>`<button type="button" data-v="${v}" aria-pressed="${t.st===v}">${v}</button>`).join('')}</div></div>
       <textarea id="p${i}" rows="2" placeholder="要点">${esc(t.point)}</textarea>
-      ${t.st!=='決定'?`<input id="w${i}" type="text" value="${esc(t.who)}" placeholder="誰が・いつまでに（例：元請 ○○さん／11月5日）">`:''}`;
+      ${t.st!=='決定'?`<input id="w${i}" type="text" value="${esc(t.who)}" placeholder="誰が・いつまでに（例：○○様／11月5日）">`:''}`;
     d.querySelector('textarea').oninput=e=>{t.point=e.target.value;update()};
     const w=d.querySelector('input');if(w)w.oninput=e=>{t.who=e.target.value;update()};
     d.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{t.st=b.dataset.v;renderTopics();update()});
@@ -232,8 +232,7 @@ function renderSheet(){
       <tr><td class="k">現場名</td><td>${esc(S.genba)||'　'}</td></tr>
       <tr><td class="k">日時</td><td>${esc(when())||'　'}</td></tr>
       <tr><td class="k">場所</td><td><div class="placewrap"><div>${esc(S.place)||'　'}${u?`<div class="url">${esc(u)}</div>`:''}</div>${q?`<div class="qr"><img src="${q}" alt="地図のQRコード">地図</div>`:''}</div></td></tr>
-      <tr><td class="k">元請</td><td>${esc(person(S.mCo,S.mName))||'　'}</td></tr>
-      <tr><td class="k">下請</td><td>${esc(person(S.sCo,S.sName))||'　'}</td></tr>
+      <tr><td class="k">出席者</td><td>${[person(S.mCo,S.mName),person(S.sCo,S.sName)].filter(Boolean).map(esc).join('\n')||'　'}</td></tr>
       ${S.others?`<tr><td class="k">ほか出席</td><td>${esc(S.others)}</td></tr>`:''}
     </table>
     <h3>打ち合わせ内容</h3>
@@ -241,7 +240,7 @@ function renderSheet(){
     <tbody>${rows||'<tr><td colspan="3">（項目が選ばれていません）</td></tr>'}</tbody></table>
     ${S.next?`<h3>次回の予定</h3><div>${esc(S.next)}</div>`:''}
     ${S.memo?`<h3>メモ</h3><div style="white-space:pre-wrap">${esc(S.memo)}</div>`:''}
-    ${S.signOn?`<div class="sign"><div>元請 確認</div><div>下請 確認</div></div>`:''}
+    ${S.signOn?`<div class="sign"><div>確認</div><div>確認</div></div>`:''}
   </div>`;
 }
 let fits=true;
@@ -260,7 +259,7 @@ function update(){renderSheet();fitText();save()}
 function lineText(){
   const u=cleanUrl(S.map);
   const L=['【打ち合わせ記録】',S.genba&&('現場：'+S.genba),'日時：'+when(),S.place&&('場所：'+S.place),u&&('地図：'+u),
-    '元請：'+person(S.mCo,S.mName),'下請：'+person(S.sCo,S.sName),S.others&&('ほか：'+S.others),''];
+    '出席者：'+[person(S.mCo,S.mName),person(S.sCo,S.sName),S.others].filter(Boolean).join('／'),''];
   S.topics.forEach(t=>{L.push(`■${t.name}［${t.st}］`);if(t.point)L.push(t.point);if(t.st!=='決定'&&t.who)L.push('→ '+t.who)});
   if(S.next)L.push('','次回：'+S.next);
   if(S.memo)L.push('','メモ：'+S.memo);
